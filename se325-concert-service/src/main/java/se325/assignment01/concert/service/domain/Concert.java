@@ -9,8 +9,14 @@ import java.util.Set;
 
 import javax.persistence.*;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import se325.assignment01.concert.common.jackson.LocalDateTimeDeserializer;
+import se325.assignment01.concert.common.jackson.LocalDateTimeSerializer;
 
 @Entity
 @Table(name = "CONCERTS")
@@ -27,11 +33,11 @@ public class Concert implements Comparable<Concert> {
     @Column(length = 1000)
     private String blurb;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "CONCERT_PERFORMER", joinColumns = @JoinColumn(name = "CONCERT_ID"), inverseJoinColumns = @JoinColumn(name = "PERFORMER_ID"))
     private List<Performer> performers = new ArrayList<Performer>();
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "CONCERT_DATES", joinColumns = @JoinColumn(name = "CONCERT_ID"))
     @Column(name = "DATE")
     private Set<LocalDateTime> dates = new HashSet<>();
@@ -97,6 +103,8 @@ public class Concert implements Comparable<Concert> {
         performers.add(performer);
     }
 
+    @JsonSerialize(contentUsing = LocalDateTimeSerializer.class)
+    @JsonDeserialize(contentUsing = LocalDateTimeDeserializer.class)
     public Set<LocalDateTime> getDates() {
         return dates;
     }

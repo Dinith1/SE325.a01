@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import se325.assignment01.concert.service.domain.Concert;
 
-@Path("/concerts")
+@Path("/concert-service")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ConcertResource {
@@ -24,8 +24,10 @@ public class ConcertResource {
     private static Logger LOGGER = LoggerFactory.getLogger(ConcertResource.class);
 
     @GET
-    @Path("{id}")
+    @Path("concerts/{id}")
     public Response getConcert(@PathParam("id") long id) {
+        LOGGER.debug("getConcert(): Getting concert for id: " + id);
+
         EntityManager em = PersistenceManager.instance().createEntityManager();
 
         try {
@@ -40,7 +42,7 @@ public class ConcertResource {
             }
 
             return Response.ok(concert).build();
-            
+
         } finally {
             em.close();
         }
