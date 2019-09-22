@@ -21,8 +21,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import se325.assignment01.concert.common.dto.ConcertSummaryDTO;
+import se325.assignment01.concert.common.dto.PerformerDTO;
 import se325.assignment01.concert.service.domain.Concert;
+import se325.assignment01.concert.service.domain.Performer;
 import se325.assignment01.concert.service.mapper.ConcertSummaryMapper;
+import se325.assignment01.concert.service.mapper.PerformerMapper;
 
 @Path("/concert-service")
 @Produces(MediaType.APPLICATION_JSON)
@@ -108,9 +111,66 @@ public class ConcertResource {
             return Response.ok(entity).build();
 
         } finally {
+            em.getTransaction().commit();
             em.close();
         }
-
     }
 
+    @GET
+    @Path("performers/{id}")
+    public Response getPerformer(@PathParam("id") long id) {
+        LOGGER.debug("getPerfomer(): Getting performer for id: " + id);
+
+        EntityManager em = PersistenceManager.instance().createEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            Performer performer = em.find(Performer.class, id);
+
+            em.getTransaction().commit();
+
+            if (performer == null) {
+                LOGGER.debug("getPerformer(): No performer with id: " + id + " exists");
+                // throw new WebApplicationException(Response.Status.NOT_FOUND);
+                return Response.status(Status.NOT_FOUND).build();
+            }
+
+            LOGGER.debug("getPerformer(): Found performer with id: " + id);
+            return Response.ok(PerformerMapper.toDto(performer)).build();
+
+        } finally {
+            em.close();
+        }
+    }
+
+    @GET
+    @Path("performers")
+    public Response getAllPerformers() {
+        LOGGER.debug("getAllPerformers(): Getting all performers");
+
+        EntityManager em = PersistenceManager.instance().createEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            List<Performer> performers = em.createQuery("select c from Performer c", Performer.class).getResultList();
+
+            LOGGER.debug("getAllPerformers(): Found " + performers.size() + " performers");
+
+            List<PerformerDTO> performerDTOs = new ArrayList<>();
+            for (Performer p : performers) {
+                performerDTOs.add(PerformerMapper.toDto(p));
+            }
+
+            GenericEntity<List<PerformerDTO>> entity = new GenericEntity<List<PerformerDTO>>(performerDTOs) {
+            };
+
+            return Response.ok(entity).build();
+
+        } finally {
+            em.getTransaction().commit();
+            em.close();
+        }
+    }
 }
