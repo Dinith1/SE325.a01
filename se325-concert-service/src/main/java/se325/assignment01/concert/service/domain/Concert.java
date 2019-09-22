@@ -13,23 +13,34 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 @Entity
+@Table(name = "CONCERTS")
 public class Concert implements Comparable<Concert> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String title;
+
+    @Column(name = "IMAGE_NAME")
     private String imageName;
+    @Column(length = 1000)
     private String blurb;
-    @ManyToMany(cascade = CascadeType.PERSIST)
+
+    @ManyToMany
+    @JoinTable(name = "CONCERT_PERFORMER", joinColumns = @JoinColumn(name = "CONCERT_ID"), inverseJoinColumns = @JoinColumn(name = "PERFORMER_ID"))
     private List<Performer> performers = new ArrayList<Performer>();
-    @Enumerated
+
+    @ElementCollection
+    @CollectionTable(name = "CONCERT_DATES", joinColumns = @JoinColumn(name = "CONCERT_ID"))
+    @Column(name = "DATE")
     private Set<LocalDateTime> dates = new HashSet<>();
 
     public Concert() {
     }
 
-    public Concert(Long id, String title, String imageName, String blurb, List<Performer> performers, Set<LocalDateTime> dates) {
+    public Concert(Long id, String title, String imageName, String blurb, List<Performer> performers,
+            Set<LocalDateTime> dates) {
         this.id = id;
         this.title = title;
         this.imageName = imageName;

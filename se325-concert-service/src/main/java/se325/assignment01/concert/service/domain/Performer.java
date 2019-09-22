@@ -1,22 +1,31 @@
 package se325.assignment01.concert.service.domain;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import se325.assignment01.concert.common.types.Genre;
 
 @Entity
+@Table(name = "PERFORMERS")
 public class Performer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
+    @Column(name = "IMAGE_NAME")
     private String imageName;
+    @Enumerated(EnumType.STRING)
     private Genre genre;
+    @Column(length = 1000)
     private String blurb;
 
     public Performer() {
@@ -100,12 +109,13 @@ public class Performer {
             return true;
 
         Performer perf = (Performer) obj;
-        return new EqualsBuilder().append(name, perf.name).isEquals();
+        return new EqualsBuilder().append(name, perf.name).append(imageName, perf.getImageName())
+                .append(genre, perf.getGenre()).isEquals();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(17, 31).append(name).hashCode();
+        return new HashCodeBuilder(17, 31).append(name).append(imageName).append(genre).hashCode();
     }
 
 }
