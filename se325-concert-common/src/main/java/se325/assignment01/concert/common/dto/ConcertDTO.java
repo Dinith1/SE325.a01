@@ -4,6 +4,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import se325.assignment01.concert.common.jackson.LocalDateTimeDeserializer;
+import se325.assignment01.concert.common.jackson.LocalDateTimeSerializer;
+
 /**
  * DTO class to represent concerts.
  * <p>
@@ -71,6 +77,8 @@ public class ConcertDTO {
         this.blurb = blurb;
     }
 
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     public List<LocalDateTime> getDates() {
         return dates;
     }

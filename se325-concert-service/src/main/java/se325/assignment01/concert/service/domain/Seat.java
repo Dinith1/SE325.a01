@@ -5,11 +5,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@Entity
 public class Seat {
 
-    // TODO Implement this class.
+	// TODO Implement this class.
 
-	public Seat() {}
+	public Seat() {
+	}
 
 	public Seat(String label, boolean isBooked, LocalDateTime date, BigDecimal price) {
 

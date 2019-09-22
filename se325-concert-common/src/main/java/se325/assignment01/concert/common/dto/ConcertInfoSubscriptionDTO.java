@@ -3,15 +3,20 @@ package se325.assignment01.concert.common.dto;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import se325.assignment01.concert.common.jackson.LocalDateTimeDeserializer;
+import se325.assignment01.concert.common.jackson.LocalDateTimeSerializer;
+
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 /**
- * Represents a subscription request to be notified when a particular concert / date's booking ratio goes over
- * a certain amount.
+ * Represents a subscription request to be notified when a particular concert /
+ * date's booking ratio goes over a certain amount.
  *
- * concertId          the id of the concert
- * date               the date of the particular performance
- * percentageBooked   the threshold at which a notification is requested
+ * concertId the id of the concert date the date of the particular performance
+ * percentageBooked the threshold at which a notification is requested
  */
 public class ConcertInfoSubscriptionDTO {
 
@@ -36,6 +41,8 @@ public class ConcertInfoSubscriptionDTO {
         this.concertId = concertId;
     }
 
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     public LocalDateTime getDate() {
         return date;
     }
@@ -54,25 +61,20 @@ public class ConcertInfoSubscriptionDTO {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
+        if (this == o)
+            return true;
 
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         ConcertInfoSubscriptionDTO that = (ConcertInfoSubscriptionDTO) o;
 
-        return new EqualsBuilder()
-                .append(concertId, that.concertId)
-                .append(percentageBooked, that.percentageBooked)
-                .append(date, that.date)
-                .isEquals();
+        return new EqualsBuilder().append(concertId, that.concertId).append(percentageBooked, that.percentageBooked)
+                .append(date, that.date).isEquals();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(17, 37)
-                .append(concertId)
-                .append(date)
-                .append(percentageBooked)
-                .toHashCode();
+        return new HashCodeBuilder(17, 37).append(concertId).append(date).append(percentageBooked).toHashCode();
     }
 }

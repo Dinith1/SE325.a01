@@ -18,7 +18,7 @@ public class TestResource {
     @GET
     @Path("/reset")
     public Response resetDatabase() {
-
+        
         PersistenceManager.instance().reset();
         ConcertUtils.initConcerts();
 

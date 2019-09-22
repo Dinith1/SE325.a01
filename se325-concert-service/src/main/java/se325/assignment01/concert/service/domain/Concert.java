@@ -15,19 +15,27 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 public class Concert {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String title;
     private String imageName;
     private String blurb;
     private List<Performer> performers;
+    @Enumerated
     private Set<LocalDateTime> dates = new HashSet<>();
+
+    public Concert() {
+    }
 
     public Concert(Long id, String title, String imageName, String blurb) {
         this.id = id;
         this.title = title;
         this.imageName = imageName;
         this.blurb = blurb;
+    }
+
+    public Concert(String title, String imageName, String blurb) {
+        this(null, title, imageName, blurb);
     }
 
     public Long getId() {
