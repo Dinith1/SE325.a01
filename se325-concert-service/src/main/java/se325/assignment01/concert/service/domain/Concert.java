@@ -16,7 +16,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 public class Concert implements Comparable<Concert> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String title;
     private String imageName;
@@ -29,11 +29,17 @@ public class Concert implements Comparable<Concert> {
     public Concert() {
     }
 
-    public Concert(Long id, String title, String imageName, String blurb) {
+    public Concert(Long id, String title, String imageName, String blurb, List<Performer> performers, Set<LocalDateTime> dates) {
         this.id = id;
         this.title = title;
         this.imageName = imageName;
         this.blurb = blurb;
+        this.performers = (performers != null) ? performers : this.performers;
+        this.dates = (dates != null) ? dates : this.dates;
+    }
+
+    public Concert(Long id, String title, String imageName, String blurb) {
+        this(id, title, imageName, blurb, null, null);
     }
 
     public Concert(String title, String imageName, String blurb) {
