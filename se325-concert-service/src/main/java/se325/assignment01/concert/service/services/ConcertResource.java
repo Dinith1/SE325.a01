@@ -1,5 +1,7 @@
 package se325.assignment01.concert.service.services;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -7,9 +9,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,11 +43,36 @@ public class ConcertResource {
 
             if (concert == null) {
                 LOGGER.debug("getConcert(): No concert with id: " + id + " exists");
-                throw new WebApplicationException(Response.Status.NOT_FOUND);
+                // throw new WebApplicationException(Response.Status.NOT_FOUND);
+                return Response.status(Status.NOT_FOUND).build();
             }
 
             LOGGER.debug("getConcert(): Found concert with id: " + id);
             return Response.ok(concert).build();
+
+        } finally {
+            em.close();
+        }
+    }
+
+    @GET
+    @Path("concerts")
+    public Response getAllConcerts() {
+        LOGGER.debug("getAllConcerts(): Getting all concerts");
+
+        EntityManager em = PersistenceManager.instance().createEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            List<Concert> concerts = em.createQuery("select c from Concert c", Concert.class).getResultList();
+
+            LOGGER.debug("getAllConcerts(): Found " + concerts.size() + " concerts");
+
+            GenericEntity<List<Concert>> entity = new GenericEntity<List<Concert>>(concerts) {
+            };
+
+            return Response.ok(entity).build();
 
         } finally {
             em.close();
