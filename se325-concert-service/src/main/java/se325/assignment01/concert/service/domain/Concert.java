@@ -35,7 +35,7 @@ public class Concert implements Comparable<Concert> {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "CONCERT_PERFORMER", joinColumns = @JoinColumn(name = "CONCERT_ID"), inverseJoinColumns = @JoinColumn(name = "PERFORMER_ID"))
-    private List<Performer> performers = new ArrayList<Performer>();
+    private Set<Performer> performers = new HashSet<Performer>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "CONCERT_DATES", joinColumns = @JoinColumn(name = "CONCERT_ID"))
@@ -45,7 +45,7 @@ public class Concert implements Comparable<Concert> {
     public Concert() {
     }
 
-    public Concert(Long id, String title, String imageName, String blurb, List<Performer> performers,
+    public Concert(Long id, String title, String imageName, String blurb, Set<Performer> performers,
             Set<LocalDateTime> dates) {
         this.id = id;
         this.title = title;
@@ -95,7 +95,7 @@ public class Concert implements Comparable<Concert> {
         this.blurb = blurb;
     }
 
-    public List<Performer> getPerformers() {
+    public Set<Performer> getPerformers() {
         return performers;
     }
 

@@ -38,9 +38,11 @@ public class ConcertResource {
             em.getTransaction().commit();
 
             if (concert == null) {
+                LOGGER.debug("getConcert(): No concert with id: " + id + " exists");
                 throw new WebApplicationException(Response.Status.NOT_FOUND);
             }
 
+            LOGGER.debug("getConcert(): Found concert with id: " + id);
             return Response.ok(concert).build();
 
         } finally {
