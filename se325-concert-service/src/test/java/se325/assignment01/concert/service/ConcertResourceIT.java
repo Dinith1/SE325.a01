@@ -172,20 +172,20 @@ public class ConcertResourceIT {
 
     }
 
-//     /**
-//      * Tests that a 200 response is returned, along with the correct performer info, when requesting a performer with
-//      * a given id.
-//      */
-//     @Test
-//     public void testGetSinglePerformer() {
+    /**
+     * Tests that a 200 response is returned, along with the correct performer info, when requesting a performer with
+     * a given id.
+     */
+    @Test
+    public void testGetSinglePerformer() {
 
-//         PerformerDTO performer = client.target(WEB_SERVICE_URI + "/performers/1").request().get(PerformerDTO.class);
+        PerformerDTO performer = client.target(WEB_SERVICE_URI + "/performers/1").request().get(PerformerDTO.class);
 
-//         assertEquals("Pentatonix", performer.getName());
-//         assertEquals("performers/ptx.jpg", performer.getImageName());
-//         assertEquals(Genre.Acappella, performer.getGenre());
+        assertEquals("Pentatonix", performer.getName());
+        assertEquals("performers/ptx.jpg", performer.getImageName());
+        assertEquals(Genre.Acappella, performer.getGenre());
 
-//     }
+    }
 
 //     /**
 //      * Tests that a 404 response is returned when requesting a nonexistent performer.
