@@ -206,7 +206,7 @@ public class ConcertResource {
                 return Response.status(Status.UNAUTHORIZED).build();
             }
 
-            // Correct username and password, so generate a cookie
+            // Correct username and password, so generate a token and return as a cookie
 
         } finally {
 

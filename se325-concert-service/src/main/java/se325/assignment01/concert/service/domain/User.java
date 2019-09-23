@@ -18,6 +18,7 @@ public class User {
     private String username;
     private String password;
     private int version;
+    private String token;
 
     public User() {
     }
@@ -62,6 +63,14 @@ public class User {
 
     public void setVersion(int version) {
         this.version = version;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     @Override
