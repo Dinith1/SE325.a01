@@ -241,31 +241,31 @@ public class ConcertResourceIT {
         assertNull(loginResponse.getCookies().get("auth"));
     }
 
-//     /**
-//      * Tests that a 401 error is returned when an incorrect password is supplied on login, and makes sure that
-//      * no authentication token is generated.
-//      */
-//     @Test
-//     public void testFailedLogin_IncorrectPassword() {
-//         // Log in
-//         Response loginResponse = login(client, "testuser", "pa5word");
-//         assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), loginResponse.getStatus());
-//         assertNull(loginResponse.getCookies().get("auth"));
-//     }
+    /**
+     * Tests that a 401 error is returned when an incorrect password is supplied on login, and makes sure that
+     * no authentication token is generated.
+     */
+    @Test
+    public void testFailedLogin_IncorrectPassword() {
+        // Log in
+        Response loginResponse = login(client, "testuser", "pa5word");
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), loginResponse.getStatus());
+        assertNull(loginResponse.getCookies().get("auth"));
+    }
 
-//     /**
-//      * tests that a 200 response is returned when the correct username and password are supplied on login, and that
-//      * a cookie named "auth" is generated.
-//      */
-//     @Test
-//     public void testSuccessfulLogin() {
-//         // Log in
-//         Response loginResponse = login(client, "testuser", "pa55word");
-//         assertEquals(Response.Status.OK.getStatusCode(), loginResponse.getStatus());
-//         Cookie authCookie = loginResponse.getCookies().get("auth");
-//         assertNotNull(authCookie.getValue());
-//         assertFalse(authCookie.getValue().isEmpty());
-//     }
+    /**
+     * tests that a 200 response is returned when the correct username and password are supplied on login, and that
+     * a cookie named "auth" is generated.
+     */
+    @Test
+    public void testSuccessfulLogin() {
+        // Log in
+        Response loginResponse = login(client, "testuser", "pa55word");
+        assertEquals(Response.Status.OK.getStatusCode(), loginResponse.getStatus());
+        Cookie authCookie = loginResponse.getCookies().get("auth");
+        assertNotNull(authCookie.getValue());
+        assertFalse(authCookie.getValue().isEmpty());
+    }
 
 //     /**
 //      * Tests that a 401 error is returned when attempting to book while not logged in, and that no booking is actually

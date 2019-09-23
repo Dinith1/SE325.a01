@@ -2,6 +2,7 @@ package se325.assignment01.concert.service.services;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.Consumes;
@@ -14,6 +15,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
@@ -181,35 +183,43 @@ public class ConcertResource {
     @POST
     @Path("/login")
     public Response login(UserDTO dto) {
-        User user = UserMapper.toDomainModel(dto);
-
-        LOGGER.debug(
-                "login(): Performing login for user: " + user.getUsername() + " and password: " + user.getPassword());
+        LOGGER.debug("login(): Logging in for user: " + dto.getUsername() + " and password: " + dto.getPassword());
 
         EntityManager em = PersistenceManager.instance().createEntityManager();
 
         try {
             em.getTransaction().begin();
 
-            User matchedUser = em.createQuery("select u from User u where u.username = :username", User.class)
-                    .setParameter("username", dto.getUsername()).getSingleResult();
-            
+            List<User> users = em.createQuery("select u from User u where u.username = :username", User.class)
+                    .setParameter("username", dto.getUsername()).getResultList();
+
             // Incorrect username
-            if (matchedUser == null) {
+            if (users.isEmpty()) {
                 LOGGER.debug("login(): Username " + dto.getUsername() + " not found");
                 return Response.status(Status.UNAUTHORIZED).build();
             }
 
+            // There must be only a single user (assuming usernames are unique)
+            User user = users.get(0);
+
             // Incorrect password
-            if (!dto.getPassword().equals(matchedUser.getUsername())) {
+            if (!dto.getPassword().equals(user.getPassword())) {
                 LOGGER.debug("login(): Incorrect password");
                 return Response.status(Status.UNAUTHORIZED).build();
             }
 
             // Correct username and password, so generate a token and return as a cookie
+            String token = UUID.randomUUID().toString();
+            user.setToken(token);
+            em.merge(user);
+            em.getTransaction().commit();
+
+            LOGGER.debug("login(): Login was successfull");
+            NewCookie authCookie = new NewCookie("auth", token);
+            return Response.ok().cookie(authCookie).build();
 
         } finally {
-
+            em.close();
         }
     }
 }
