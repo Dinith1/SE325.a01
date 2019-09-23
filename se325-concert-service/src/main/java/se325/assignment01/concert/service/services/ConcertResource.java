@@ -23,12 +23,14 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import se325.assignment01.concert.common.dto.ConcertDTO;
 import se325.assignment01.concert.common.dto.ConcertSummaryDTO;
 import se325.assignment01.concert.common.dto.PerformerDTO;
 import se325.assignment01.concert.common.dto.UserDTO;
 import se325.assignment01.concert.service.domain.Concert;
 import se325.assignment01.concert.service.domain.Performer;
 import se325.assignment01.concert.service.domain.User;
+import se325.assignment01.concert.service.mapper.ConcertMapper;
 import se325.assignment01.concert.service.mapper.ConcertSummaryMapper;
 import se325.assignment01.concert.service.mapper.PerformerMapper;
 import se325.assignment01.concert.service.mapper.UserMapper;
@@ -56,12 +58,11 @@ public class ConcertResource {
 
             if (concert == null) {
                 LOGGER.debug("getConcert(): No concert with id: " + id + " exists");
-                // throw new WebApplicationException(Response.Status.NOT_FOUND);
                 return Response.status(Status.NOT_FOUND).build();
             }
 
             LOGGER.debug("getConcert(): Found concert with id: " + id);
-            return Response.ok(concert).build();
+            return Response.ok(ConcertMapper.toDto(concert)).build();
 
         } finally {
             em.close();
@@ -80,9 +81,14 @@ public class ConcertResource {
 
             List<Concert> concerts = em.createQuery("select c from Concert c", Concert.class).getResultList();
 
-            LOGGER.debug("getAllConcerts(): Found " + concerts.size() + " concerts");
+            List<ConcertDTO> dtos = new ArrayList<>();
+            for (Concert c : concerts) {
+                dtos.add(ConcertMapper.toDto(c));
+            }
 
-            GenericEntity<List<Concert>> entity = new GenericEntity<List<Concert>>(concerts) {
+            LOGGER.debug("getAllConcerts(): Found " + dtos.size() + " concerts");
+
+            GenericEntity<List<ConcertDTO>> entity = new GenericEntity<List<ConcertDTO>>(dtos) {
             };
 
             return Response.ok(entity).build();
@@ -138,7 +144,6 @@ public class ConcertResource {
 
             if (performer == null) {
                 LOGGER.debug("getPerformer(): No performer with id: " + id + " exists");
-                // throw new WebApplicationException(Response.Status.NOT_FOUND);
                 return Response.status(Status.NOT_FOUND).build();
             }
 
@@ -208,17 +213,18 @@ public class ConcertResource {
                 return Response.status(Status.UNAUTHORIZED).build();
             }
 
-            // Correct username and password, so generate a token and return as a cookie
+            // Correct username and password, so generate a token, add it to the USER table
+            // and return as a cookie
             String token = UUID.randomUUID().toString();
             user.setToken(token);
             em.merge(user);
-            em.getTransaction().commit();
 
             LOGGER.debug("login(): Login was successfull");
             NewCookie authCookie = new NewCookie("auth", token);
-            return Response.ok().cookie(authCookie).build();
+            return Response.ok(UserMapper.toDto(user)).cookie(authCookie).build();
 
         } finally {
+            em.getTransaction().commit();
             em.close();
         }
     }

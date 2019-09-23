@@ -99,6 +99,10 @@ public class Concert implements Comparable<Concert> {
         return performers;
     }
 
+    public void setPerformers(Set<Performer> performers) {
+        this.performers = performers;
+    }
+
     public void addPerformer(Performer performer) {
         performers.add(performer);
     }
@@ -107,6 +111,10 @@ public class Concert implements Comparable<Concert> {
     @JsonDeserialize(contentUsing = LocalDateTimeDeserializer.class)
     public Set<LocalDateTime> getDates() {
         return dates;
+    }
+
+    public void setDates(Set<LocalDateTime> dates) {
+        this.dates = dates;
     }
 
     public void addDate(LocalDateTime date) {
