@@ -1,5 +1,7 @@
 package se325.assignment01.concert.service.services;
 
+import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -31,8 +33,10 @@ import se325.assignment01.concert.common.dto.ConcertDTO;
 import se325.assignment01.concert.common.dto.ConcertSummaryDTO;
 import se325.assignment01.concert.common.dto.PerformerDTO;
 import se325.assignment01.concert.common.dto.UserDTO;
+import se325.assignment01.concert.service.domain.Booking;
 import se325.assignment01.concert.service.domain.Concert;
 import se325.assignment01.concert.service.domain.Performer;
+import se325.assignment01.concert.service.domain.Seat;
 import se325.assignment01.concert.service.domain.User;
 import se325.assignment01.concert.service.mapper.ConcertMapper;
 import se325.assignment01.concert.service.mapper.ConcertSummaryMapper;
@@ -233,42 +237,82 @@ public class ConcertResource {
         }
     }
 
-    // @POST
-    // @Path("bookings")
-    // public Response makeBooking(BookingRequestDTO dto, @CookieParam("auth") Cookie token) {
-    //     LOGGER.debug("makeBooking(): Making booking for concert with id: " + dto.getConcertId() + " on date: "
-    //             + dto.getDate().toString());
+    @POST
+    @Path("bookings")
+    public Response makeBooking(BookingRequestDTO dto, @CookieParam("auth") Cookie token) {
+        LOGGER.debug("makeBooking(): Making booking for concert with id: " + dto.getConcertId() + " on date: "
+                + dto.getDate().toString());
 
-    //     // User is not logged in (no auth cookie in request)
-    //     if (token == null) {
-    //         LOGGER.debug("makeBooking(): Not logged in");
-    //         return Response.status(Status.UNAUTHORIZED).build();
-    //     }
+        // User is not logged in (no auth cookie in request)
+        if (token == null) {
+            LOGGER.debug("makeBooking(): Not logged in");
+            return Response.status(Status.UNAUTHORIZED).build();
+        }
 
-    //     EntityManager em = PersistenceManager.instance().createEntityManager();
+        // =========================== NEED TO ADD USER TO BOOKING
+        // ===========================
 
-    //     try {
-    //         em.getTransaction().begin();
+        EntityManager em = PersistenceManager.instance().createEntityManager();
 
-    //         Concert concert = em.find(Concert.class, dto.getConcertId());
+        try {
+            em.getTransaction().begin();
 
-    //         // Concert doesn't exist
-    //         if (concert == null) {
-    //             LOGGER.debug("makeBooking(): Concert with id: " + dto.getConcertId() + " does not exist");
-    //             return Response.status(Status.BAD_REQUEST).build();
-    //         }
+            Concert concert = em.find(Concert.class, dto.getConcertId());
 
-    //         // Concert isn't scheduled on the specified date
-    //         if (!concert.getDates().contains(dto.getDate())) {
-    //             LOGGER.debug("makeBooking(): Concert not scheduled on " + dto.getDate().toString());
-    //             return Response.status(Status.BAD_REQUEST).build();
-    //         }
+            // Concert doesn't exist
+            if (concert == null) {
+                LOGGER.debug("makeBooking(): Concert with id: " + dto.getConcertId() + " does not exist");
+                return Response.status(Status.BAD_REQUEST).build();
+            }
 
-    //         // At least of of the seats is already booked
+            // Concert isn't scheduled on the specified date
+            if (!concert.getDates().contains(dto.getDate())) {
+                LOGGER.debug("makeBooking(): Concert not scheduled on " + dto.getDate().toString());
+                return Response.status(Status.BAD_REQUEST).build();
+            }
 
+            List<Seat> bookedSeats = em
+                    .createQuery("select b.seat from Booking b where b.concert_id = :id and b.date = :date", Seat.class)
+                    .setParameter("id", dto.getConcertId()).setParameter("date", dto.getDate().toString())
+                    .getResultList();
 
-    //     } finally {
-    //         em.close();
-    //     }
-    // }
+            List<String> bookedSeatLabels = new ArrayList<>();
+            for (Seat s : bookedSeats) {
+                bookedSeatLabels.add(s.getLabel());
+            }
+
+            for (String bookedSeat : bookedSeatLabels) {
+                for (String requestedSeat : dto.getSeatLabels()) {
+                    // At least of of the seats is already booked
+                    if (bookedSeat.equals(requestedSeat)) {
+                        LOGGER.debug("makeBooking(): Can't book an already booked seat");
+                        return Response.status(Status.FORBIDDEN).build();
+                    }
+                }
+            }
+
+            // None of the seats are booked, so book them
+            List<Seat> seats = em
+                    .createQuery("select s from Seat s where s.date = :date and s.label member of :labels", Seat.class)
+                    .setParameter("date", dto.getDate()).setParameter("labels", dto.getSeatLabels()).getResultList();
+
+            User user = em.createQuery("select u from User u where u.token = :token", User.class)
+                    .setParameter("token", token.toString()).getSingleResult();
+
+            Booking newBooking = new Booking(concert, dto.getDate(), seats, user);
+            em.persist(newBooking);
+            em.getTransaction().commit();
+            return Response.created(URI.create("/bookings/" + concert.getId() + "/" + dto.getDate().toString()))
+                    .build();
+
+        } finally {
+            em.close();
+        }
+    }
+
+    @GET
+    @Path("bookings/{concertId}/{date}")
+    public Response getBooking(@PathParam("concertId") Long concertId, @PathParam("date") LocalDateTime date) {
+        return null;
+    }
 }
