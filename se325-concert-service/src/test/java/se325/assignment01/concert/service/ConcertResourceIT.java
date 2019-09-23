@@ -229,17 +229,17 @@ public class ConcertResourceIT {
 
     }
 
-//     /**
-//      * Tests that a 401 error is returned when an incorrect username is supplied on login, and makes sure that
-//      * no authentication token is generated.
-//      */
-//     @Test
-//     public void testFailedLogin_IncorrectUsername() {
-//         // Log in
-//         Response loginResponse = login(client, "tesftuser", "pa55word");
-//         assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), loginResponse.getStatus());
-//         assertNull(loginResponse.getCookies().get("auth"));
-//     }
+    /**
+     * Tests that a 401 error is returned when an incorrect username is supplied on login, and makes sure that
+     * no authentication token is generated.
+     */
+    @Test
+    public void testFailedLogin_IncorrectUsername() {
+        // Log in
+        Response loginResponse = login(client, "tesftuser", "pa55word");
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), loginResponse.getStatus());
+        assertNull(loginResponse.getCookies().get("auth"));
+    }
 
 //     /**
 //      * Tests that a 401 error is returned when an incorrect password is supplied on login, and makes sure that
@@ -801,17 +801,17 @@ public class ConcertResourceIT {
 // //
 // //    }
 
-//     // Helper methods
-//     // --------------------------------------------------------------------
+    // Helper methods
+    // --------------------------------------------------------------------
 
-//     /**
-//      * Helper method to log us in.
-//      */
-//     private static Response login(Client client, String username, String password) {
-//         UserDTO creds = new UserDTO(username, password);
-//         return client.target(WEB_SERVICE_URI + "/login")
-//                 .request().post(Entity.json(creds));
-//     }
+    /**
+     * Helper method to log us in.
+     */
+    private static Response login(Client client, String username, String password) {
+        UserDTO creds = new UserDTO(username, password);
+        return client.target(WEB_SERVICE_URI + "/login")
+                .request().post(Entity.json(creds));
+    }
 
 //     /**
 //      * Helper method - tries to book entire rows.

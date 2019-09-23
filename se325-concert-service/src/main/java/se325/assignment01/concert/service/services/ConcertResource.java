@@ -6,6 +6,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -22,10 +23,13 @@ import org.slf4j.LoggerFactory;
 
 import se325.assignment01.concert.common.dto.ConcertSummaryDTO;
 import se325.assignment01.concert.common.dto.PerformerDTO;
+import se325.assignment01.concert.common.dto.UserDTO;
 import se325.assignment01.concert.service.domain.Concert;
 import se325.assignment01.concert.service.domain.Performer;
+import se325.assignment01.concert.service.domain.User;
 import se325.assignment01.concert.service.mapper.ConcertSummaryMapper;
 import se325.assignment01.concert.service.mapper.PerformerMapper;
+import se325.assignment01.concert.service.mapper.UserMapper;
 
 @Path("/concert-service")
 @Produces(MediaType.APPLICATION_JSON)
@@ -171,6 +175,41 @@ public class ConcertResource {
         } finally {
             em.getTransaction().commit();
             em.close();
+        }
+    }
+
+    @POST
+    @Path("/login")
+    public Response login(UserDTO dto) {
+        User user = UserMapper.toDomainModel(dto);
+
+        LOGGER.debug(
+                "login(): Performing login for user: " + user.getUsername() + " and password: " + user.getPassword());
+
+        EntityManager em = PersistenceManager.instance().createEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            User matchedUser = em.createQuery("select u from User u where u.username = :username", User.class)
+                    .setParameter("username", dto.getUsername()).getSingleResult();
+            
+            // Incorrect username
+            if (matchedUser == null) {
+                LOGGER.debug("login(): Username " + dto.getUsername() + " not found");
+                return Response.status(Status.UNAUTHORIZED).build();
+            }
+
+            // Incorrect password
+            if (!dto.getPassword().equals(matchedUser.getUsername())) {
+                LOGGER.debug("login(): Incorrect password");
+                return Response.status(Status.UNAUTHORIZED).build();
+            }
+
+            // Correct username and password, so generate a cookie
+
+        } finally {
+
         }
     }
 }
