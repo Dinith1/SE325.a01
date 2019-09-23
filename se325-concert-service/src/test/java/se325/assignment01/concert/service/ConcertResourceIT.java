@@ -813,28 +813,28 @@ public class ConcertResourceIT {
                 .request().post(Entity.json(creds));
     }
 
-//     /**
-//      * Helper method - tries to book entire rows.
-//      */
-//     private static Response attemptBooking(Client client, long concertId, LocalDateTime date, char minRow, char maxRow) {
-//         List<String> toBook = new ArrayList<>();
-//         for (char row = minRow; row <= maxRow; row++) {
-//             for (int num = 1; num <= 12; num++) {
-//                 toBook.add("" + row + num);
-//             }
-//         }
-//         return attemptBooking(client, concertId, date, toBook.toArray(new String[0]));
-//     }
+    /**
+     * Helper method - tries to book entire rows.
+     */
+    private static Response attemptBooking(Client client, long concertId, LocalDateTime date, char minRow, char maxRow) {
+        List<String> toBook = new ArrayList<>();
+        for (char row = minRow; row <= maxRow; row++) {
+            for (int num = 1; num <= 12; num++) {
+                toBook.add("" + row + num);
+            }
+        }
+        return attemptBooking(client, concertId, date, toBook.toArray(new String[0]));
+    }
 
-//     /**
-//      * Attempts a booking with the given details, and returns the server's response. Should already be logged in.
-//      */
-//     private static Response attemptBooking(Client client, long concertId, LocalDateTime date, String... seatLabels) {
+    /**
+     * Attempts a booking with the given details, and returns the server's response. Should already be logged in.
+     */
+    private static Response attemptBooking(Client client, long concertId, LocalDateTime date, String... seatLabels) {
 
-//         BookingRequestDTO bReq = new BookingRequestDTO(concertId, date, Arrays.asList(seatLabels));
+        BookingRequestDTO bReq = new BookingRequestDTO(concertId, date, Arrays.asList(seatLabels));
 
-//         // Make booking
-//         return client.target(WEB_SERVICE_URI + "/bookings").request().post(Entity.json(bReq));
-//     }
+        // Make booking
+        return client.target(WEB_SERVICE_URI + "/bookings").request().post(Entity.json(bReq));
+    }
 
 }

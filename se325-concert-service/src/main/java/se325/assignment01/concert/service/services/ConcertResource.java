@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.CookieParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -13,6 +14,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
@@ -23,6 +25,8 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import se325.assignment01.concert.common.dto.BookingDTO;
+import se325.assignment01.concert.common.dto.BookingRequestDTO;
 import se325.assignment01.concert.common.dto.ConcertDTO;
 import se325.assignment01.concert.common.dto.ConcertSummaryDTO;
 import se325.assignment01.concert.common.dto.PerformerDTO;
@@ -228,4 +232,43 @@ public class ConcertResource {
             em.close();
         }
     }
+
+    // @POST
+    // @Path("bookings")
+    // public Response makeBooking(BookingRequestDTO dto, @CookieParam("auth") Cookie token) {
+    //     LOGGER.debug("makeBooking(): Making booking for concert with id: " + dto.getConcertId() + " on date: "
+    //             + dto.getDate().toString());
+
+    //     // User is not logged in (no auth cookie in request)
+    //     if (token == null) {
+    //         LOGGER.debug("makeBooking(): Not logged in");
+    //         return Response.status(Status.UNAUTHORIZED).build();
+    //     }
+
+    //     EntityManager em = PersistenceManager.instance().createEntityManager();
+
+    //     try {
+    //         em.getTransaction().begin();
+
+    //         Concert concert = em.find(Concert.class, dto.getConcertId());
+
+    //         // Concert doesn't exist
+    //         if (concert == null) {
+    //             LOGGER.debug("makeBooking(): Concert with id: " + dto.getConcertId() + " does not exist");
+    //             return Response.status(Status.BAD_REQUEST).build();
+    //         }
+
+    //         // Concert isn't scheduled on the specified date
+    //         if (!concert.getDates().contains(dto.getDate())) {
+    //             LOGGER.debug("makeBooking(): Concert not scheduled on " + dto.getDate().toString());
+    //             return Response.status(Status.BAD_REQUEST).build();
+    //         }
+
+    //         // At least of of the seats is already booked
+
+
+    //     } finally {
+    //         em.close();
+    //     }
+    // }
 }

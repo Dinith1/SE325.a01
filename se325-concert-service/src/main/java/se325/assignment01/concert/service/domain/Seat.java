@@ -8,7 +8,6 @@ import se325.assignment01.concert.common.jackson.LocalDateTimeDeserializer;
 import se325.assignment01.concert.common.jackson.LocalDateTimeSerializer;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Objects;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
