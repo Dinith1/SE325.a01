@@ -304,22 +304,21 @@ public class ConcertResource {
 
             Booking newBooking = new Booking(dto.getConcertId(), dto.getDate(), seats, user.getId());
             em.persist(newBooking);
+
+            // Update isBooked for all seats in database
+            for (Seat s : seats) {
+                em.merge(s);
+            }
+
             em.getTransaction().commit();
 
-            String successLogMsg = getSeatBookingSuccessMessage(concert, dto.getDate(), seats, user);
-
-            LOGGER.debug("makeBooking(): " + successLogMsg));
+            LOGGER.debug("makeBooking(): Successfully made booking: " + newBooking.toString());
             return Response.created(URI.create("/bookings/" + concert.getId() + "/" + dto.getDate().toString()))
                     .build();
 
         } finally {
             em.close();
         }
-    }
-
-    private String getSeatookingSuccessMessage(Concert concert, LocalDateTime dates, List<Seat> seats, User user) {
-        StringBuffer buffer = new StringBuffer();
-        buffer.append("")
     }
 
     // @GET

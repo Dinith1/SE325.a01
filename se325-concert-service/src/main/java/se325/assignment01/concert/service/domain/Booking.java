@@ -40,7 +40,7 @@ public class Booking {
     public Booking(Long concertId, LocalDateTime date, List<Seat> seats, Long userId) {
         this.concertId = concertId;
         this.date = date;
-        this.seats = seats;
+        this.setSeats(seats);
         this.userId = userId;
     }
 
