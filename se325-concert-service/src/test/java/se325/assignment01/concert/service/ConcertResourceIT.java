@@ -661,26 +661,26 @@ public class ConcertResourceIT {
         }
     }
 
-//     // Tests for publish / subscribe functions - uncomment when ready.
-//     // --------------------------------------------------------------------
+    // Tests for publish / subscribe functions - uncomment when ready.
+    // --------------------------------------------------------------------
 
-// //    /**
-// //     * Tests that a 401 error is returned when trying to make a subscription while not authenticated.
-// //     */
-// //    @Test
-// //    public void testUnauthorizedSubscription() throws InterruptedException, ExecutionException, TimeoutException {
-// //        // Attempt to subscribe
-// //        LocalDateTime date = LocalDateTime.of(2020, 2, 15, 20, 0, 0);
-// //        ConcertInfoSubscriptionDTO subInfo = new ConcertInfoSubscriptionDTO(1, date, 50);
-// //        Future<Response> future = client.target(WEB_SERVICE_URI + "/subscribe/concertInfo")
-// //                .request().async().post(Entity.json(subInfo));
-// //
-// //        // Wait for at most 1 second - the failure should be near-instant.
-// //        Response response = future.get(1, TimeUnit.SECONDS);
-// //
-// //        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
-// //    }
-// //
+   /**
+    * Tests that a 401 error is returned when trying to make a subscription while not authenticated.
+    */
+   @Test
+   public void testUnauthorizedSubscription() throws InterruptedException, ExecutionException, TimeoutException {
+       // Attempt to subscribe
+       LocalDateTime date = LocalDateTime.of(2020, 2, 15, 20, 0, 0);
+       ConcertInfoSubscriptionDTO subInfo = new ConcertInfoSubscriptionDTO(1, date, 50);
+       Future<Response> future = client.target(WEB_SERVICE_URI + "/subscribe/concertInfo")
+               .request().async().post(Entity.json(subInfo));
+
+       // Wait for at most 1 second - the failure should be near-instant.
+       Response response = future.get(1, TimeUnit.SECONDS);
+
+       assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+   }
+
 // //    /**
 // //     * Tests that a 400 error is returned when trying to make a subscription for a nonexistent concert.
 // //     */

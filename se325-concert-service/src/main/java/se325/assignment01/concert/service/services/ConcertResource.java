@@ -6,7 +6,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
 import javax.persistence.EntityManager;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
@@ -16,21 +15,20 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import se325.assignment01.concert.common.dto.BookingDTO;
 import se325.assignment01.concert.common.dto.BookingRequestDTO;
 import se325.assignment01.concert.common.dto.ConcertDTO;
+import se325.assignment01.concert.common.dto.ConcertInfoSubscriptionDTO;
 import se325.assignment01.concert.common.dto.ConcertSummaryDTO;
 import se325.assignment01.concert.common.dto.PerformerDTO;
 import se325.assignment01.concert.common.dto.SeatDTO;
@@ -47,6 +45,7 @@ import se325.assignment01.concert.service.mapper.ConcertSummaryMapper;
 import se325.assignment01.concert.service.mapper.PerformerMapper;
 import se325.assignment01.concert.service.mapper.SeatMapper;
 import se325.assignment01.concert.service.mapper.UserMapper;
+import se325.assignment01.concert.service.util.Subscription;
 
 @Path("/concert-service")
 @Produces(MediaType.APPLICATION_JSON)
@@ -55,6 +54,7 @@ public class ConcertResource {
 
     private static Logger LOGGER = LoggerFactory.getLogger(ConcertResource.class);
     private static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+    private static List<Subscription> subscriptions = new ArrayList<>();
 
     @GET
     @Path("concerts/{id}")
@@ -443,5 +443,21 @@ public class ConcertResource {
         } finally {
             em.close();
         }
+    }
+
+    @POST
+    @Path("subscribe/concertInfo")
+    public Response subscribe(ConcertInfoSubscriptionDTO dto, @CookieParam("auth") Cookie token,
+            @Suspended AsyncResponse resp) {
+
+        // User is not logged in (no auth cookie in request)
+        if (token == null) {
+            LOGGER.debug("subscribe(): Not logged in");
+            return resp.resume();
+        }
+
+        
+        
+
     }
 }
