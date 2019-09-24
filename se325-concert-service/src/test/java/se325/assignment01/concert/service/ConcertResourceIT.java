@@ -295,61 +295,61 @@ public class ConcertResourceIT {
 
     }
 
-//     /**
-//      * Tests that a 201 response is returned when making a valid authorized booking, and that the requested seats now
-//      * are correctly reported as being booked.
-//      */
-//     @Test
-//     public void testMakeSuccessfulBooking() {
+    /**
+     * Tests that a 201 response is returned when making a valid authorized booking, and that the requested seats now
+     * are correctly reported as being booked.
+     */
+    @Test
+    public void testMakeSuccessfulBooking() {
 
-//         // Log in
-//         login(client, "testuser", "pa55word");
+        // Log in
+        login(client, "testuser", "pa55word");
 
-//         // Attempt booking
-//         Response response = attemptBooking(client, 1,
-//                 LocalDateTime.of(2020, 2, 15, 20, 0, 0),
-//                 "C5", "C6");
+        // Attempt booking
+        Response response = attemptBooking(client, 1,
+                LocalDateTime.of(2020, 2, 15, 20, 0, 0),
+                "C5", "C6");
 
-//         // Make sure it worked
-//         assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
-//         assertNotNull(response.getLocation());
+        // Make sure it worked
+        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
+        assertNotNull(response.getLocation());
 
-//         // Make sure two seats were booked
-//         List<SeatDTO> bookedSeats = client.target(WEB_SERVICE_URI + "/seats/2020-02-15T20:00:00?status=Booked")
-//                 .request().get(new GenericType<List<SeatDTO>>() {
-//                 });
+        // Make sure two seats were booked
+        List<SeatDTO> bookedSeats = client.target(WEB_SERVICE_URI + "/seats/2020-02-15T20:00:00?status=Booked")
+                .request().get(new GenericType<List<SeatDTO>>() {
+                });
 
-//         assertEquals(2, bookedSeats.size());
+        assertEquals(2, bookedSeats.size());
 
-//     }
+    }
 
-//     /**
-//      * Tests that a 201 response is returned when making a valid authorized booking, and that the link returned
-//      * allows the user to correctly navigate to the new booking.
-//      */
-//     @Test
-//     public void testGetOwnBookingById() {
+    // /**
+    //  * Tests that a 201 response is returned when making a valid authorized booking, and that the link returned
+    //  * allows the user to correctly navigate to the new booking.
+    //  */
+    // @Test
+    // public void testGetOwnBookingById() {
 
-//         // Log in
-//         login(client, "testuser", "pa55word");
+    //     // Log in
+    //     login(client, "testuser", "pa55word");
 
-//         // Make booking
-//         Response bookingResponse = attemptBooking(client, 1,
-//                 LocalDateTime.of(2020, 2, 15, 20, 0, 0),
-//                 "C5", "C6");
+    //     // Make booking
+    //     Response bookingResponse = attemptBooking(client, 1,
+    //             LocalDateTime.of(2020, 2, 15, 20, 0, 0),
+    //             "C5", "C6");
 
-//         // Get the booking
-//         BookingDTO booking = client.target(bookingResponse.getLocation()).request().get(BookingDTO.class);
+    //     // Get the booking
+    //     BookingDTO booking = client.target(bookingResponse.getLocation()).request().get(BookingDTO.class);
 
-//         // Check details
-//         assertEquals(1L, booking.getConcertId());
-//         assertEquals(LocalDateTime.of(2020, 2, 15, 20, 0, 0), booking.getDate());
-//         assertEquals(2, booking.getSeats().size());
-//         booking.getSeats().sort(Comparator.comparing(SeatDTO::getLabel));
-//         assertEquals("C5", booking.getSeats().get(0).getLabel());
-//         assertEquals("C6", booking.getSeats().get(1).getLabel());
+    //     // Check details
+    //     assertEquals(1L, booking.getConcertId());
+    //     assertEquals(LocalDateTime.of(2020, 2, 15, 20, 0, 0), booking.getDate());
+    //     assertEquals(2, booking.getSeats().size());
+    //     booking.getSeats().sort(Comparator.comparing(SeatDTO::getLabel));
+    //     assertEquals("C5", booking.getSeats().get(0).getLabel());
+    //     assertEquals("C6", booking.getSeats().get(1).getLabel());
 
-//     }
+    // }
 
 //     /**
 //      * Tests that a 403 error is returned when trying to access a booking of another user,

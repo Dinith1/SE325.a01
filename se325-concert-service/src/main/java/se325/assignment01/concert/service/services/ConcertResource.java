@@ -2,6 +2,7 @@ package se325.assignment01.concert.service.services;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -32,7 +33,9 @@ import se325.assignment01.concert.common.dto.BookingRequestDTO;
 import se325.assignment01.concert.common.dto.ConcertDTO;
 import se325.assignment01.concert.common.dto.ConcertSummaryDTO;
 import se325.assignment01.concert.common.dto.PerformerDTO;
+import se325.assignment01.concert.common.dto.SeatDTO;
 import se325.assignment01.concert.common.dto.UserDTO;
+import se325.assignment01.concert.common.types.BookingStatus;
 import se325.assignment01.concert.service.domain.Booking;
 import se325.assignment01.concert.service.domain.Concert;
 import se325.assignment01.concert.service.domain.Performer;
@@ -41,6 +44,7 @@ import se325.assignment01.concert.service.domain.User;
 import se325.assignment01.concert.service.mapper.ConcertMapper;
 import se325.assignment01.concert.service.mapper.ConcertSummaryMapper;
 import se325.assignment01.concert.service.mapper.PerformerMapper;
+import se325.assignment01.concert.service.mapper.SeatMapper;
 import se325.assignment01.concert.service.mapper.UserMapper;
 
 @Path("/concert-service")
@@ -49,6 +53,7 @@ import se325.assignment01.concert.service.mapper.UserMapper;
 public class ConcertResource {
 
     private static Logger LOGGER = LoggerFactory.getLogger(ConcertResource.class);
+    private static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     @GET
     @Path("concerts/{id}")
@@ -194,7 +199,7 @@ public class ConcertResource {
     }
 
     @POST
-    @Path("/login")
+    @Path("login")
     public Response login(UserDTO dto) {
         LOGGER.debug("login(): Logging in for user: " + dto.getUsername() + " and password: " + dto.getPassword());
 
@@ -249,9 +254,6 @@ public class ConcertResource {
             return Response.status(Status.UNAUTHORIZED).build();
         }
 
-        // =========================== NEED TO ADD USER TO BOOKING
-        // ===========================
-
         EntityManager em = PersistenceManager.instance().createEntityManager();
 
         try {
@@ -271,14 +273,15 @@ public class ConcertResource {
                 return Response.status(Status.BAD_REQUEST).build();
             }
 
-            List<Seat> bookedSeats = em
-                    .createQuery("select b.seat from Booking b where b.concert_id = :id and b.date = :date", Seat.class)
-                    .setParameter("id", dto.getConcertId()).setParameter("date", dto.getDate().toString())
-                    .getResultList();
+            List<Booking> matchingBookings = em
+                    .createQuery("select b from Booking b where b.concertId = :id and b.date = :date", Booking.class)
+                    .setParameter("id", dto.getConcertId()).setParameter("date", dto.getDate()).getResultList();
 
             List<String> bookedSeatLabels = new ArrayList<>();
-            for (Seat s : bookedSeats) {
-                bookedSeatLabels.add(s.getLabel());
+            for (Booking b : matchingBookings) {
+                for (Seat s : b.getSeats()) {
+                    bookedSeatLabels.add(s.getLabel());
+                }
             }
 
             for (String bookedSeat : bookedSeatLabels) {
@@ -293,15 +296,19 @@ public class ConcertResource {
 
             // None of the seats are booked, so book them
             List<Seat> seats = em
-                    .createQuery("select s from Seat s where s.date = :date and s.label member of :labels", Seat.class)
+                    .createQuery("select s from Seat s where s.date = :date and s.label in :labels", Seat.class)
                     .setParameter("date", dto.getDate()).setParameter("labels", dto.getSeatLabels()).getResultList();
 
             User user = em.createQuery("select u from User u where u.token = :token", User.class)
-                    .setParameter("token", token.toString()).getSingleResult();
+                    .setParameter("token", token.getValue().toString()).getSingleResult();
 
-            Booking newBooking = new Booking(concert, dto.getDate(), seats, user);
+            Booking newBooking = new Booking(dto.getConcertId(), dto.getDate(), seats, user.getId());
             em.persist(newBooking);
             em.getTransaction().commit();
+
+            String successLogMsg = getSeatBookingSuccessMessage(concert, dto.getDate(), seats, user);
+
+            LOGGER.debug("makeBooking(): " + successLogMsg));
             return Response.created(URI.create("/bookings/" + concert.getId() + "/" + dto.getDate().toString()))
                     .build();
 
@@ -310,9 +317,53 @@ public class ConcertResource {
         }
     }
 
+    private String getSeatookingSuccessMessage(Concert concert, LocalDateTime dates, List<Seat> seats, User user) {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("")
+    }
+
+    // @GET
+    // @Path("bookings")
+
     @GET
-    @Path("bookings/{concertId}/{date}")
-    public Response getBooking(@PathParam("concertId") Long concertId, @PathParam("date") LocalDateTime date) {
-        return null;
+    @Path("seats/{date}")
+    public Response getSeats(@PathParam("date") String date, @QueryParam("status") BookingStatus status) {
+        LOGGER.debug("getSeats(): Getting " + status.toString() + " seats for date: " + date + " that are " + status);
+
+        EntityManager em = PersistenceManager.instance().createEntityManager();
+
+        try {
+
+            LocalDateTime ldt = LocalDateTime.parse(date, DATE_FORMATTER);
+            List<Seat> seats;
+
+            if ((status != null) && (status != BookingStatus.Any)) {
+                // Get only booked/non-booked seats for the date
+                boolean isBooked = (status == BookingStatus.Booked);
+
+                seats = em.createQuery("select s from Seat s where s.date = :date and s.isBooked = :status", Seat.class)
+                        .setParameter("date", ldt).setParameter("status", isBooked).getResultList();
+
+            } else {
+                // Get all seats for the date
+                seats = em.createQuery("select s from Seat s where s.date = :date", Seat.class)
+                        .setParameter("date", ldt).getResultList();
+            }
+
+            List<SeatDTO> dtos = new ArrayList<>();
+            for (Seat c : seats) {
+                dtos.add(SeatMapper.toDto(c));
+            }
+
+            LOGGER.debug("getSeats(): Found " + dtos.size() + " " + status.toString() + " seats");
+
+            GenericEntity<List<SeatDTO>> entity = new GenericEntity<List<SeatDTO>>(dtos) {
+            };
+
+            return Response.ok(entity).build();
+
+        } finally {
+            em.close();
+        }
     }
 }
