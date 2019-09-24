@@ -41,6 +41,7 @@ import se325.assignment01.concert.service.domain.Concert;
 import se325.assignment01.concert.service.domain.Performer;
 import se325.assignment01.concert.service.domain.Seat;
 import se325.assignment01.concert.service.domain.User;
+import se325.assignment01.concert.service.mapper.BookingMapper;
 import se325.assignment01.concert.service.mapper.ConcertMapper;
 import se325.assignment01.concert.service.mapper.ConcertSummaryMapper;
 import se325.assignment01.concert.service.mapper.PerformerMapper;
@@ -313,7 +314,8 @@ public class ConcertResource {
             em.getTransaction().commit();
 
             LOGGER.debug("makeBooking(): Successfully made booking: " + newBooking.toString());
-            return Response.created(URI.create("/bookings/" + concert.getId() + "/" + dto.getDate().toString()))
+            NewCookie tokenCookie = new NewCookie(token);
+            return Response.created(URI.create("concert-service/bookings/" + newBooking.getId())).cookie(tokenCookie)
                     .build();
 
         } finally {
@@ -321,8 +323,85 @@ public class ConcertResource {
         }
     }
 
-    // @GET
-    // @Path("bookings")
+    @GET
+    @Path("bookings/{id}")
+    public Response getBooking(@PathParam("id") Long id, @CookieParam("auth") Cookie token) {
+        LOGGER.debug("getBooking(): Getting booking with id: " + id);
+
+        // User is not logged in (no auth cookie in request)
+        if (token == null) {
+            LOGGER.debug("getBooking(): Not logged in");
+            return Response.status(Status.UNAUTHORIZED).build();
+        }
+
+        EntityManager em = PersistenceManager.instance().createEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            Booking booking = em.find(Booking.class, id);
+
+            // Booking with that id doesn't exist
+            if (booking == null) {
+                LOGGER.debug("getBooking(): No booking with id: " + id + " exists");
+                return Response.status(Status.NOT_FOUND).build();
+            }
+
+            // Assume user exists
+            User user = em.createQuery("select u from User u where u.token = :token", User.class)
+                    .setParameter("token", token.getValue().toString()).getSingleResult();
+
+            // User is trying to access a booking not belonging to him
+            if (!booking.getUserId().equals(user.getId())) {
+                LOGGER.debug("getBooking(): Cannot access another user's booking");
+                return Response.status(Status.FORBIDDEN).build();
+            }
+
+            return Response.ok(BookingMapper.toDto(booking)).build();
+
+        } finally {
+            em.close();
+        }
+    }
+
+    @GET
+    @Path("bookings")
+    public Response getAllBookings(@CookieParam("auth") Cookie token) {
+
+        // User is not logged in (no auth cookie in request)
+        if (token == null) {
+            LOGGER.debug("getBooking(): Not logged in");
+            return Response.status(Status.UNAUTHORIZED).build();
+        }
+
+        LOGGER.debug("getBooking(): Getting all bookings for user with token: " + token.getValue());
+
+        EntityManager em = PersistenceManager.instance().createEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            // Assume user exists
+            User user = em.createQuery("select u from User u where u.token = :token", User.class)
+                    .setParameter("token", token.getValue().toString()).getSingleResult();
+
+            List<Booking> bookings = em.createQuery("select b from Booking b where b.userId = :id", Booking.class)
+                    .setParameter("id", user.getId()).getResultList();
+
+            List<BookingDTO> dtos = new ArrayList<>();
+            for (Booking b : bookings) {
+                dtos.add(BookingMapper.toDto(b));
+            }
+
+            GenericEntity<List<BookingDTO>> entity = new GenericEntity<List<BookingDTO>>(dtos) {
+            };
+
+            return Response.ok(entity).build();
+
+        } finally {
+            em.close();
+        }
+    }
 
     @GET
     @Path("seats/{date}")

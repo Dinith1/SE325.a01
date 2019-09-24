@@ -23,7 +23,8 @@ public class Booking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int id;
+    Long id;
+    
     @Column(name = "CONCERT_ID")
     private Long concertId;
 
@@ -42,6 +43,14 @@ public class Booking {
         this.date = date;
         this.setSeats(seats);
         this.userId = userId;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Long getConcertId() {
@@ -85,7 +94,9 @@ public class Booking {
     @Override
     public String toString() {
         StringBuffer buffer = new StringBuffer();
-        buffer.append("Booking, concertId: ");
+        buffer.append("Booking, id: ");
+        buffer.append(id);
+        buffer.append(", concertId: ");
         buffer.append(concertId);
         buffer.append(", date: ");
         buffer.append(date.toString());
