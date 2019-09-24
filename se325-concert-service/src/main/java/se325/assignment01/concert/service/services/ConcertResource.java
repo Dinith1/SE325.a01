@@ -315,9 +315,13 @@ public class ConcertResource {
 
             em.getTransaction().commit();
 
-            List<Seat> bookedSeats = em
-                    .createQuery("select b.seats from Booking b where b.concertId = :id and b.date = :date", Seat.class)
-                    .setParameter("id", dto.getConcertId()).setParameter("date", dto.getDate()).getResultList();
+            LOGGER.debug("makeBooking(): Notifying subscribers");
+
+            // Find all the seats that match the booking
+            List<Seat> bookedSeats = new ArrayList<>();
+            for (Booking b : matchingBookings) {
+                bookedSeats.addAll(b.getSeats());
+            }
 
             // Notify subscribers if their seat threshold is passed
             for (Subscription sub : subscriptions) {
@@ -428,7 +432,6 @@ public class ConcertResource {
         EntityManager em = PersistenceManager.instance().createEntityManager();
 
         try {
-
             LocalDateTime ldt = LocalDateTime.parse(date, DATE_FORMATTER);
             List<Seat> seats;
 
