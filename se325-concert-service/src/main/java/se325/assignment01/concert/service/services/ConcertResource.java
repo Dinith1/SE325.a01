@@ -336,8 +336,13 @@ public class ConcertResource {
             // client's booking when both bookings are done at the same time
             List<Booking> matchingBookings = em
                     .createQuery("select b from Booking b where b.concertId = :id and b.date = :date", Booking.class)
-                    .setParameter("id", dto.getConcertId()).setParameter("date", dto.getDate())
-                    .setLockMode(LockModeType.OPTIMISTIC).getResultList();
+                    .setParameter("id", dto.getConcertId()).setParameter("date", dto.getDate()).getResultList();
+
+            // List<Booking> matchingBookings = em
+            // .createQuery("select b from Booking b where b.concertId = :id and b.date =
+            // :date", Booking.class)
+            // .setParameter("id", dto.getConcertId()).setParameter("date", dto.getDate())
+            // .setLockMode(LockModeType.OPTIMISTIC).getResultList();
 
             // Find all the seats that have already been booked
             List<String> bookedSeatLabels = new ArrayList<>();
