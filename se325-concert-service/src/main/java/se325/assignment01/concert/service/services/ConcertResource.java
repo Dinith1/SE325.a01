@@ -319,9 +319,11 @@ public class ConcertResource {
 
             em.getTransaction().commit();
 
-            // Notify any subscribers
+            // Notify any subscribers if necessary
             if (!subscriptions.isEmpty()) {
-                LOGGER.debug("makeBooking(): Notifying subscribers");
+                LOGGER.debug("makeBooking(): Checking to notify subscribers");
+
+                matchingBookings.add(newBooking);
 
                 // Find all the seats that match the booking
                 List<Seat> bookedSeats = new ArrayList<>();
@@ -330,15 +332,20 @@ public class ConcertResource {
                 }
 
                 // Notify subscribers if their seat threshold is passed
+                List<Subscription> subs = new ArrayList<>();
+
                 for (Subscription sub : subscriptions) {
                     if ((sub.getSubDto().getConcertId() == dto.getConcertId())
                             && (sub.getSubDto().getDate().equals(dto.getDate()))) {
-                        if (sub.getSubDto().getPercentageBooked() > (100 * bookedSeats.size()
+                        if (sub.getSubDto().getPercentageBooked() < ((100 * bookedSeats.size())
                                 / TheatreLayout.NUM_SEATS_IN_THEATRE)) {
                             LOGGER.debug("makeBooking(): Threshold reached: Notifying subscriber");
-                            postToSubs(sub, TheatreLayout.NUM_SEATS_IN_THEATRE - bookedSeats.size());
+                            subs.add(sub);
                         }
                     }
+                }
+                if (!subs.isEmpty()) {
+                    postToSubs(subs, TheatreLayout.NUM_SEATS_IN_THEATRE - bookedSeats.size());
                 }
             }
 
@@ -512,8 +519,10 @@ public class ConcertResource {
             for (Booking b : matchingBookings) {
                 bookedSeats.addAll(b.getSeats());
             }
+            LOGGER.debug("subscribe(): Number of booked seats: " + bookedSeats.size());
+            LOGGER.debug("subscribe(): Threshold: " + dto.getPercentageBooked() + "%");
 
-            if (dto.getPercentageBooked() > (100 * bookedSeats.size() / TheatreLayout.NUM_SEATS_IN_THEATRE)) {
+            if (dto.getPercentageBooked() < ((100 * bookedSeats.size()) / TheatreLayout.NUM_SEATS_IN_THEATRE)) {
                 LOGGER.debug("subscribe(): Threshold reached: Notifying subscriber");
                 ConcertInfoNotificationDTO infoDto = new ConcertInfoNotificationDTO(
                         TheatreLayout.NUM_SEATS_IN_THEATRE - bookedSeats.size());
@@ -522,6 +531,7 @@ public class ConcertResource {
             }
 
             // Otherwise add to subscriber list to notify later
+            LOGGER.debug("subscribe(): Successfully subscribed");
             subscriptions.add(new Subscription(dto, resp));
         } finally {
             em.close();
@@ -529,15 +539,20 @@ public class ConcertResource {
     }
 
     @POST
-    public void postToSubs(Subscription sub, int numSeatsRemaining) {
-        LOGGER.debug("postToSubs(): Notifying sub for concert id: " + sub.getSubDto().getConcertId()
-                + " and threshold: " + sub.getSubDto().getPercentageBooked() + "%");
+    public void postToSubs(List<Subscription> subs, int numSeatsRemaining) {
+        LOGGER.debug("postToSubs(): Notifying " + subs.size() + " subscribers");
 
         synchronized (subscriptions) {
-            ConcertInfoNotificationDTO dto = new ConcertInfoNotificationDTO(numSeatsRemaining);
-            sub.getResponse().resume(Response.ok(dto).build());
+            for (Subscription sub : subs) {
+                LOGGER.debug("postToSubs(): Notifying sub for concert id: " + sub.getSubDto().getConcertId()
+                        + " and threshold: " + sub.getSubDto().getPercentageBooked() + "%");
 
-            subscriptions.remove(sub);
+                ConcertInfoNotificationDTO dto = new ConcertInfoNotificationDTO(numSeatsRemaining);
+                sub.getResponse().resume(Response.ok(dto).build());
+
+                subscriptions.remove(sub);
+            }
         }
     }
+    
 }
