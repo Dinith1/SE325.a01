@@ -571,7 +571,7 @@ public class ConcertResource {
             List<Booking> matchingBookings = em
                     .createQuery("select b from Booking b where b.concertId = :id and b.date = :date", Booking.class)
                     .setParameter("id", dto.getConcertId()).setParameter("date", dto.getDate()).getResultList();
-.
+
             // Find all booked seats for that concert and date
             List<Seat> bookedSeats = new ArrayList<>();
             for (Booking b : matchingBookings) {
