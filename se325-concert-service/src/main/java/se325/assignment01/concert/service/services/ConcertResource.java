@@ -234,13 +234,13 @@ public class ConcertResource {
             String token = UUID.randomUUID().toString();
             user.setToken(token);
             em.merge(user);
+            em.getTransaction().commit();
 
             LOGGER.debug("login(): Login was successfull");
             NewCookie authCookie = new NewCookie("auth", token);
             return Response.ok(UserMapper.toDto(user)).cookie(authCookie).build();
 
         } finally {
-            em.getTransaction().commit();
             em.close();
         }
     }
@@ -276,10 +276,12 @@ public class ConcertResource {
                 return Response.status(Status.BAD_REQUEST).build();
             }
 
+            // Find all existing bookings for the same concert and date
             List<Booking> matchingBookings = em
                     .createQuery("select b from Booking b where b.concertId = :id and b.date = :date", Booking.class)
                     .setParameter("id", dto.getConcertId()).setParameter("date", dto.getDate()).getResultList();
 
+            // Find all the seats that have already been booked
             List<String> bookedSeatLabels = new ArrayList<>();
             for (Booking b : matchingBookings) {
                 for (Seat s : b.getSeats()) {
@@ -287,6 +289,7 @@ public class ConcertResource {
                 }
             }
 
+            // Check if any of the requested seats have already been booked
             for (String bookedSeat : bookedSeatLabels) {
                 for (String requestedSeat : dto.getSeatLabels()) {
                     // At least of of the seats is already booked
@@ -308,28 +311,33 @@ public class ConcertResource {
             Booking newBooking = new Booking(dto.getConcertId(), dto.getDate(), seats, user.getId());
             em.persist(newBooking);
 
-            // Update isBooked for all seats in database
+            // Update isBooked for all seats in database (isBooked is set inside Booking
+            // constructor)
             for (Seat s : seats) {
                 em.merge(s);
             }
 
             em.getTransaction().commit();
 
-            LOGGER.debug("makeBooking(): Notifying subscribers");
+            // Notify any subscribers
+            if (!subscriptions.isEmpty()) {
+                LOGGER.debug("makeBooking(): Notifying subscribers");
 
-            // Find all the seats that match the booking
-            List<Seat> bookedSeats = new ArrayList<>();
-            for (Booking b : matchingBookings) {
-                bookedSeats.addAll(b.getSeats());
-            }
+                // Find all the seats that match the booking
+                List<Seat> bookedSeats = new ArrayList<>();
+                for (Booking b : matchingBookings) {
+                    bookedSeats.addAll(b.getSeats());
+                }
 
-            // Notify subscribers if their seat threshold is passed
-            for (Subscription sub : subscriptions) {
-                if ((sub.getSubDto().getConcertId() == dto.getConcertId())
-                        && (sub.getSubDto().getDate().equals(dto.getDate()))) {
-                    if (sub.getSubDto()
-                            .getPercentageBooked() > (100 * bookedSeats.size() / TheatreLayout.NUM_SEATS_IN_THEATRE)) {
-                        postToSubs(sub, TheatreLayout.NUM_SEATS_IN_THEATRE - bookedSeats.size());
+                // Notify subscribers if their seat threshold is passed
+                for (Subscription sub : subscriptions) {
+                    if ((sub.getSubDto().getConcertId() == dto.getConcertId())
+                            && (sub.getSubDto().getDate().equals(dto.getDate()))) {
+                        if (sub.getSubDto().getPercentageBooked() > (100 * bookedSeats.size()
+                                / TheatreLayout.NUM_SEATS_IN_THEATRE)) {
+                            LOGGER.debug("makeBooking(): Threshold reached: Notifying subscriber");
+                            postToSubs(sub, TheatreLayout.NUM_SEATS_IN_THEATRE - bookedSeats.size());
+                        }
                     }
                 }
             }
@@ -469,6 +477,7 @@ public class ConcertResource {
     @Path("subscribe/concertInfo")
     public void subscribe(ConcertInfoSubscriptionDTO dto, @CookieParam("auth") Cookie token,
             @Suspended AsyncResponse resp) {
+        LOGGER.debug("subscribe(): Attempting to subscribe");
 
         // User is not logged in (no auth cookie in request)
         if (token == null) {
@@ -483,33 +492,33 @@ public class ConcertResource {
 
             // Specified concert doesn't exist
             if (concert == null) {
-                LOGGER.debug("subscribe(): Concert with id : " + dto.getConcertId() + " does not exists");
-                resp.resume(Response.status(Response.Status.BAD_REQUEST));
+                LOGGER.debug("subscribe(): Concert with id: " + dto.getConcertId() + " does not exists");
+                resp.resume(Response.status(Response.Status.BAD_REQUEST).build());
             }
 
             // Concert isn't on the specified date
             if (!concert.getDates().contains(dto.getDate())) {
                 LOGGER.debug("subscribe(): Concert is not on date: " + dto.getDate().toString());
-                resp.resume(Response.status(Response.Status.BAD_REQUEST));
+                resp.resume(Response.status(Response.Status.BAD_REQUEST).build());
             }
 
-            // Return response if threashold has already been passed
-            List<Seat> bookedSeats = em
-                    .createQuery("select b.seats from Booking b where b.concertId = :id and b.date = :date", Seat.class)
+            // Find all bookings for that concert and date
+            List<Booking> matchingBookings = em
+                    .createQuery("select b from Booking b where b.concertId = :id and b.date = :date", Booking.class)
                     .setParameter("id", dto.getConcertId()).setParameter("date", dto.getDate()).getResultList();
 
-            // Notify subscribers if their seat threshold is passed
-            for (Subscription sub : subscriptions) {
-                if ((sub.getSubDto().getConcertId() == dto.getConcertId())
-                        && (sub.getSubDto().getDate().equals(dto.getDate()))) {
-                    if (sub.getSubDto()
-                            .getPercentageBooked() > (100 * bookedSeats.size() / TheatreLayout.NUM_SEATS_IN_THEATRE)) {
-                        ConcertInfoNotificationDTO infoDto = new ConcertInfoNotificationDTO(
-                                TheatreLayout.NUM_SEATS_IN_THEATRE - bookedSeats.size());
-                        resp.resume(Response.ok(infoDto));
-                        return;
-                    }
-                }
+            // Find all booked seats for that concert and date
+            List<Seat> bookedSeats = new ArrayList<>();
+            for (Booking b : matchingBookings) {
+                bookedSeats.addAll(b.getSeats());
+            }
+
+            if (dto.getPercentageBooked() > (100 * bookedSeats.size() / TheatreLayout.NUM_SEATS_IN_THEATRE)) {
+                LOGGER.debug("subscribe(): Threshold reached: Notifying subscriber");
+                ConcertInfoNotificationDTO infoDto = new ConcertInfoNotificationDTO(
+                        TheatreLayout.NUM_SEATS_IN_THEATRE - bookedSeats.size());
+                resp.resume(Response.ok(infoDto).build());
+                return;
             }
 
             // Otherwise add to subscriber list to notify later
@@ -521,9 +530,12 @@ public class ConcertResource {
 
     @POST
     public void postToSubs(Subscription sub, int numSeatsRemaining) {
+        LOGGER.debug("postToSubs(): Notifying sub for concert id: " + sub.getSubDto().getConcertId()
+                + " and threshold: " + sub.getSubDto().getPercentageBooked() + "%");
+
         synchronized (subscriptions) {
             ConcertInfoNotificationDTO dto = new ConcertInfoNotificationDTO(numSeatsRemaining);
-            sub.getResponse().resume(Response.ok(dto));
+            sub.getResponse().resume(Response.ok(dto).build());
 
             subscriptions.remove(sub);
         }
