@@ -8,11 +8,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import se325.assignment01.concert.common.types.Genre;
 
+/**
+ * Domain class for representing a performer. Stores the performer's name, image
+ * string representation, genre and a blurb.
+ */
 @Entity
 @Table(name = "PERFORMERS")
 public class Performer {
@@ -20,11 +23,15 @@ public class Performer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
+
     @Column(name = "IMAGE_NAME")
     private String imageName;
+
     @Enumerated(EnumType.STRING)
     private Genre genre;
+
     @Column(length = 1000)
     private String blurb;
 

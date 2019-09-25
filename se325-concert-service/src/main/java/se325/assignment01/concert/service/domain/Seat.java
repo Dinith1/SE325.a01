@@ -14,6 +14,10 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+/**
+ * Domain class for representing a seat. Contains the seat's label, its booked
+ * status (true or false), the date the seat is for, and the its price.
+ */
 @Entity
 @Table(name = "SEATS")
 public class Seat {

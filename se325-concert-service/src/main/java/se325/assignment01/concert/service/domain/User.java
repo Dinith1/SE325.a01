@@ -9,6 +9,11 @@ import javax.persistence.Table;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+/**
+ * Domain class for representing a user, who logs into the service and books
+ * concert seats. Contains the user's username, password, version, and login
+ * token which the user sends in his requests, indicating that he's logged it.
+ */
 @Entity
 @Table(name = "USERS")
 public class User {

@@ -7,12 +7,17 @@ import se325.assignment01.concert.common.dto.SeatDTO;
 import se325.assignment01.concert.service.domain.Booking;
 import se325.assignment01.concert.service.domain.Seat;
 
+/**
+ * Helper class to convert from domain-model to DTO objects representing
+ * Bookings.
+ */
 public class BookingMapper {
+
     public static BookingDTO toDto(Booking booking) {
         return new BookingDTO(booking.getConcertId(), booking.getDate(), seatListToDto(booking.getSeats()));
     }
 
-      /**
+    /**
      * Helper method to convert a list of Seats to a list of SeatDTOs
      * 
      * @param seats List of seats to convert
@@ -27,4 +32,5 @@ public class BookingMapper {
 
         return dtos;
     }
+
 }

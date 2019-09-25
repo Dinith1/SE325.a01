@@ -3,8 +3,6 @@ package se325.assignment01.concert.service.domain;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -18,6 +16,10 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import se325.assignment01.concert.common.jackson.LocalDateTimeDeserializer;
 import se325.assignment01.concert.common.jackson.LocalDateTimeSerializer;
 
+/**
+ * Domain class for representing a concert booking. Stores the id of the
+ * concert, the date it's on, and the seats booked.
+ */
 @Entity
 public class Booking {
 
@@ -30,7 +32,7 @@ public class Booking {
 
     private LocalDateTime date;
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REFRESH)
+    @OneToMany(fetch = FetchType.EAGER)
     private List<Seat> seats = new ArrayList<>();
 
     Long userId;

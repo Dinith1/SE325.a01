@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.GET;
@@ -49,6 +50,60 @@ import se325.assignment01.concert.service.mapper.UserMapper;
 import se325.assignment01.concert.service.util.Subscription;
 import se325.assignment01.concert.service.util.TheatreLayout;
 
+/**
+ * Class to implement a simple REST Web service for managing Concerts.
+ * <p>
+ * <p>
+ * ConcertResource implements a WEB service with the following interface:
+ * <p>
+ * - GET <base-uri>/concerts/{id} : Retrieves a Concert based on its unique id.
+ * The HTTP response message has a status code of either 200 or 404, depending
+ * on whether the specified Concert is found.
+ * <p>
+ * - GET <base-uri>/concerts : Retrieves a list of all the Concerts. Returns an
+ * HTTP code of 200.
+ * <p>
+ * - GET <base-uri>/concerts/summaries : Retrieves a list of Concert summaries.
+ * Returns an HTTP code of 200.
+ * <p>
+ * - GET <base-uri>/performers/{id} : Retrieves a Performer based on its unique
+ * id. The HTTP response message has a status code of either 200 or 404,
+ * depending on whether the specified Performer is found.
+ * <p>
+ * - GET <base-uri>/performers : Retrieves a list of all the Performers. Returns
+ * an HTTP code of 200.
+ * <p>
+ * - POST <base-uri>/login : Allows a user to log into the concert service.
+ * Returns an HTTP code of 200 if successfully logged in, or 404 if the username
+ * or password is incorrect.
+ * <p>
+ * - POST <base-uri>/bookings : Allows the user to make a booking for a concert.
+ * Returns an HTTP code of 201 and URL to the location of the new booking when
+ * successful, 404 when the user is not logged in, 400 when trying to book a
+ * non-existent concert or non-existent date for a concert, or 403 when trying
+ * to book a seat that has already been booked.
+ * <p>
+ * GET <base-uri>/bookings/{id} : Retrieves a booking based on its unique id.
+ * Returns at HTTP code of 200 when successful, 404 when the user is not logged
+ * in, 401 when the booking doesn't exist, or 403 when the user is trying to
+ * access a booking not belonging to him.
+ * <p>
+ * GET <base-uri>/bookings : Retrieves a list of all the bookings of the user
+ * making the request. Returns an HTTP code of 200 when successful or 401 when
+ * the user is not logged in.
+ * <p>
+ * GET <base-uri>/seats/{date}?status=<BookingStatus> : Retrieves a list of
+ * seats for a particular date that have the booking status specified. Returns
+ * an HTTP code of 200.
+ * <p>
+ * POST <base-uri>/subscribe/concertInfo : Allows the user to subscribe to be
+ * notified when a certain number of seats for a specified concert and date has
+ * been booked. Returns an HTTP code of 200 when the number of seats booked
+ * seats has already been passe, 404 when the user is not logged in, or 400 when
+ * the concert doesn't exist or the date for that concert doesn't exist.
+ * Susbscribers will be notified via the POST method postToSubs().
+ * <p>
+ */
 @Path("/concert-service")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -277,9 +332,12 @@ public class ConcertResource {
             }
 
             // Find all existing bookings for the same concert and date
+            // Also set the lock mode to OPTIMISTIC, to prevent a client overriding another
+            // client's booking when both bookings are done at the same time
             List<Booking> matchingBookings = em
                     .createQuery("select b from Booking b where b.concertId = :id and b.date = :date", Booking.class)
-                    .setParameter("id", dto.getConcertId()).setParameter("date", dto.getDate()).getResultList();
+                    .setParameter("id", dto.getConcertId()).setParameter("date", dto.getDate())
+                    .setLockMode(LockModeType.OPTIMISTIC).getResultList();
 
             // Find all the seats that have already been booked
             List<String> bookedSeatLabels = new ArrayList<>();
@@ -513,7 +571,7 @@ public class ConcertResource {
             List<Booking> matchingBookings = em
                     .createQuery("select b from Booking b where b.concertId = :id and b.date = :date", Booking.class)
                     .setParameter("id", dto.getConcertId()).setParameter("date", dto.getDate()).getResultList();
-
+.
             // Find all booked seats for that concert and date
             List<Seat> bookedSeats = new ArrayList<>();
             for (Booking b : matchingBookings) {
@@ -554,5 +612,5 @@ public class ConcertResource {
             }
         }
     }
-    
+
 }
